@@ -6,8 +6,11 @@ const sleep = (minisecond) =>
     new Promise((resolve) => setTimeout(resolve, minisecond || 1000));
 
 const SUSPENDED_STATE_STRING = '挂起';
+
+//THAY TOKEN MỚI TẠI ĐÂY
 const TOKEN =
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3Mjk1MDQ2NTgsInVzZXJuYW1lIjoiVnUgVGh1eSBMaW5oIn0.20X3JfEA2YjQZvrIyGKW-myypxDONXNGZaRyMFOeGwE';
+//////////////////////////////
 
 async function getOrderList(pageSize = 500) {
     const TODAY = new Date();
