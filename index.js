@@ -190,6 +190,9 @@ async function trackingOrders(params) {
                         ...order,
                         serviceName: service.stepName,
                         processName: step.fullProcessName,
+                        suspendTime: lastStepRecord.createTime,
+                        restartTime: JSON.parse(lastStepRecord.extraProps)
+                            .nextRestartTime,
                     });
                 }
             }
