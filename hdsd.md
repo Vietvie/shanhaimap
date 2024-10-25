@@ -1,14 +1,30 @@
-# Bước 1
+#### YÊU CẦU BẮT BUỘC
 
-Mở file index.js tìm dòng:
-const TOKEN = 'Token mới của bạn' - Thay đổi dữ liệu trong dấu ngoặc đơn ''
-Bấn Ctr + S (Command + S) để lưu
+Đã cài đặt node.js //link tải https://nodejs.org/en
 
-# Bước 2
+#######################################################
 
-Mở terminal (Terminal => new terminal)
-gõ lệnh: node index.js rồi bấm Enter
+### Bước 1
 
-# Bước 3
+(Bước này chỉ cần cài đặt 1 lần cho đến khi tài khoản logout thì cần cài đặt lại)
+Mở file setting.js tìm dòng:
+TOKEN='Token mới của bạn' Thay đổi dữ liệu sau dấu =
+
+# Bước 1.1
+
+Lưu lại file
+Bấm Ctr + S (Command + S) để lưu
+
+### Bước 2
+
+Chuột phải vào thư mục => chọn Terminal mới tại thư mục
+
+Chạy các lệnh sau (Bỏ qua dấu #):
+
+# npm install (Chỉ dành cho lần đầu tiên)
+
+# node index.js
+
+### Bước 3
 
 Đợi kết quả xử lý trong file suspended_order.json

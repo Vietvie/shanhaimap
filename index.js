@@ -1,57 +1,63 @@
 const axios = require('axios');
-const { writeFileSync } = require('fs-extra');
-const exportToCSVForAll = require('./convertToCsv');
+const { writeFileSync, readFileSync } = require('fs-extra');
+
 //UTILS
 const sleep = (minisecond) =>
     new Promise((resolve) => setTimeout(resolve, minisecond || 1000));
 
-const SUSPENDED_STATE_STRING = '挂起';
+// const SUSPENDED_STATE_STRING = '挂起';
+const SUSPENDED_STATE_STRING = 'order-task-hang-up';
 
-//THAY TOKEN MỚI TẠI ĐÂY
-const TOKEN =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3Mjk1MDQ2NTgsInVzZXJuYW1lIjoiVnUgVGh1eSBMaW5oIn0.20X3JfEA2YjQZvrIyGKW-myypxDONXNGZaRyMFOeGwE';
-//////////////////////////////
+const SETTING = readFileSync('setting.txt', {
+    encoding: 'utf-8',
+});
+const TOKEN = SETTING.split('=')[1];
 
 async function getOrderList(pageSize = 500) {
     const TODAY = new Date();
     const DAY = TODAY.getDate();
     const MONTH = TODAY.getMonth() + 1;
     const YEAR = TODAY.getFullYear();
-    const { data } = await axios.get(
-        `https://office.shanhaimap.com/apis/jeecg-system/order/list2?_t=1728701921&createTime_begin=${`${
-            YEAR - 1
-        }-${MONTH}-${DAY}`}&createTime_end=${`${YEAR}-${MONTH}-${DAY}`}&unhide=false&column=createTime&order=desc&field=id,createTime,contractSigningDate,code,customerName,sellStaffName,projectManagerName,state,updateBy,operation&pageNo=1&pageSize=${pageSize}`,
-        {
-            headers: {
-                Accept: 'application/json, text/plain, */*',
-                'Accept-Language':
-                    'en-US,en;q=0.9,vi;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,zh;q=0.5',
-                Connection: 'keep-alive',
-                Referer:
-                    'https://office.shanhaimap.com/shmapweb/order/check/list',
-                'Sec-Fetch-Dest': 'empty',
-                'Sec-Fetch-Mode': 'cors',
-                'Sec-Fetch-Site': 'same-origin',
-                'User-Agent':
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
-                'X-Access-Token': TOKEN,
-            },
-        }
-    );
+    try {
+        const { data } = await axios.get(
+            `https://office.shanhaimap.com/apis/jeecg-system/order/list2?_t=1728701921&createTime_begin=${`${
+                YEAR - 1
+            }-${MONTH}-${DAY}`}&createTime_end=${`${YEAR}-${MONTH}-${DAY}`}&unhide=false&column=createTime&order=desc&field=id,createTime,contractSigningDate,code,customerName,sellStaffName,projectManagerName,state,updateBy,operation&pageNo=1&pageSize=${pageSize}`,
+            {
+                headers: {
+                    Accept: 'application/json, text/plain, */*',
+                    'Accept-Language':
+                        'en-US,en;q=0.9,vi;q=0.8,zh-TW;q=0.7,zh-CN;q=0.6,zh;q=0.5',
+                    Connection: 'keep-alive',
+                    Referer:
+                        'https://office.shanhaimap.com/shmapweb/order/check/list',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'User-Agent':
+                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+                    'X-Access-Token': TOKEN,
+                },
+            }
+        );
 
-    if (data.code !== 200) {
+        if (data.code !== 200) {
+            return null;
+        }
+        const dataModified = data.result.records.map((order) => ({
+            id: order.id,
+            state: order.state,
+            code: order.code,
+            contractCode: order.contractCode,
+            customerName: order.customerName,
+            sellStaffName: order.sellStaffName,
+            projectManagerName: order.projectManagerName,
+        }));
+        return dataModified;
+    } catch (error) {
+        console.log(error);
         return null;
     }
-    const dataModified = data.result.records.map((order) => ({
-        id: order.id,
-        state: order.state,
-        code: order.code,
-        contractCode: order.contractCode,
-        customerName: order.customerName,
-        sellStaffName: order.sellStaffName,
-        projectManagerName: order.projectManagerName,
-    }));
-    return dataModified;
 }
 
 async function getOrderServices(orderId) {
@@ -163,15 +169,16 @@ async function getServiceStepsInfo(businessId) {
 async function trackingOrders(params) {
     const orders = await getOrderList();
     if (!orders) {
-        console.log('order list not found!');
+        console.log('❌ TOKEN ERROR! SETTING NEW TOKEN!');
         return null;
     }
 
     const orderSlice = orders.slice(0, 1000);
     const suspendOrders = [];
 
-    for (const order of orderSlice) {
-        console.log(order.code);
+    for (let i = 0; i < orderSlice.length; i++) {
+        const order = orderSlice[i];
+        console.log(`[ ${i + 1}/${orderSlice.length} ] ${order.code}`);
         const serviceList = await getOrderServices(order.id);
         if (!serviceList) continue;
         for (const service of serviceList) {
@@ -182,8 +189,7 @@ async function trackingOrders(params) {
                 const lastStepRecord = stepInfoList[stepInfoList.length - 1];
 
                 if (
-                    lastStepRecord.operateType_dictText ===
-                    SUSPENDED_STATE_STRING
+                    lastStepRecord.operateType.includes(SUSPENDED_STATE_STRING)
                 ) {
                     console.log('Found Order Suspened');
                     suspendOrders.push({
@@ -202,6 +208,9 @@ async function trackingOrders(params) {
     writeFileSync('suspended_order.json', JSON.stringify(suspendOrders), {
         encoding: 'utf-8',
     });
+
+    console.log('✅ RUN COMPELETED!!!!!');
+    console.log(`${suspendOrders.length} suspended orders`);
 }
 
 trackingOrders();
