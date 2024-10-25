@@ -21,7 +21,7 @@ Chuột phải vào thư mục => chọn Terminal mới tại thư mục
 
 Chạy các lệnh sau (Bỏ qua dấu #):
 
-npm install
+npm install (Chỉ chạy trong lần đầu tiên cài đặt)
 
 node index.js
 
