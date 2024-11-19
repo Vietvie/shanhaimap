@@ -6,7 +6,7 @@ const sleep = (minisecond) =>
     new Promise((resolve) => setTimeout(resolve, minisecond || 1000));
 
 // const SUSPENDED_STATE_STRING = '挂起';
-const SUSPENDED_STATE_STRING = 'order-task-hang-up';
+const SUSPENDED_STATE_STRING = 'hang-up';
 
 const SETTING = readFileSync('setting.txt', {
     encoding: 'utf-8',
@@ -183,6 +183,7 @@ async function trackingOrders(params) {
         if (!serviceList) continue;
         for (const service of serviceList) {
             const stepList = await getServiceSteps(service.id);
+            if (!stepList) continue;
             for (const step of stepList) {
                 const stepInfoList = await getServiceStepsInfo(step.id);
                 if (!stepInfoList || !stepInfoList.length) continue;
