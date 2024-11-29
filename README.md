@@ -8,7 +8,7 @@
 
 (Bước này chỉ cần cài đặt 1 lần cho đến khi tài khoản logout thì cần cài đặt lại)
 
-Mở file setting.js tìm dòng:
+Mở file setting.txt tìm dòng:
 TOKEN='Token mới của bạn' Thay đổi dữ liệu sau dấu =
 
 ## Bước 1.1
